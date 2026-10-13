@@ -194,6 +194,31 @@ describe('LoginPage — language switcher', () => {
   });
 });
 
+describe('LoginPage — theme switcher', () => {
+  it('FE-LOGIN-WIRE-035: the theme button toggles dark mode and reacts to hover', () => {
+    seedStore(useSettingsStore, { settings: { dark_mode: false } });
+    renderPage();
+    const button = screen.getByRole('button', { name: /dark mode/i });
+    expect(button).toBeInTheDocument();
+
+    const { before, hovered, after } = hoverRoundTrip(button, 'background');
+    expect(hovered).not.toBe(before);
+    expect(after).toBe(before);
+
+    fireEvent.click(button);
+    expect(useSettingsStore.getState().settings.dark_mode).toBe('dark');
+  });
+
+  it('FE-LOGIN-WIRE-036: the theme button shows light mode label when currently dark', () => {
+    seedStore(useSettingsStore, { settings: { dark_mode: 'dark' } });
+    renderPage();
+    const button = screen.getByRole('button', { name: /light mode/i });
+    expect(button).toBeInTheDocument();
+
+    fireEvent.click(button);
+    expect(useSettingsStore.getState().settings.dark_mode).toBe('light');
+  });
+});
 
 describe('LoginPage — OIDC-only mode', () => {
   it('FE-LOGIN-WIRE-008: offers only the SSO link, named after the provider', () => {

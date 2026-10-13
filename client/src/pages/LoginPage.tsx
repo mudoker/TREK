@@ -4,8 +4,10 @@ import {
   Globe,
   KeyRound,
   Lock,
+  Moon,
   Plane,
   Shield,
+  Sun,
   User,
 } from 'lucide-react';
 import React from 'react';
@@ -14,6 +16,7 @@ import { SUPPORTED_LANGUAGES, useTranslation } from '../i18n';
 import { useLogin } from './login/useLogin';
 import LoginWorld from './login/LoginWorld';
 import { clearSignedOut } from '../utils/signedOut';
+import { useSettingsStore } from '../store/settingsStore';
 
 /** Fixed so the sky does not reshuffle on every render. */
 const STARFIELD = [
@@ -81,6 +84,23 @@ export default function LoginPage(): React.ReactElement {
     handlePasskeyLogin,
   } = useLogin();
 
+  const { settings, updateSetting } = useSettingsStore();
+  const darkModeSetting = settings.dark_mode;
+  const isDarkActive = Boolean(
+    darkModeSetting === true ||
+    darkModeSetting === 'dark' ||
+    (darkModeSetting === 'auto' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  );
+
+  const toggleTheme = () => {
+    const next = isDarkActive ? 'light' : 'dark';
+    document.documentElement.classList.add('trek-theme-transitioning');
+    document.documentElement.classList.toggle('dark', next === 'dark');
+    updateSetting('dark_mode', next).catch(() => {});
+    window.setTimeout(() => {
+      document.documentElement.classList.remove('trek-theme-transitioning');
+    }, 360);
+  };
 
   const oidcButtonShown = !!(appConfig?.oidc_configured && appConfig?.oidc_login && !oidcOnly);
   const passkeyAvailable = !!(
@@ -95,15 +115,15 @@ export default function LoginPage(): React.ReactElement {
   const inputBase: React.CSSProperties = {
     width: '100%',
     padding: '11px 12px 11px 40px',
-    border: '1px solid #e5e7eb',
+    border: isDarkActive ? '1px solid #374151' : '1px solid #e5e7eb',
     borderRadius: 12,
     fontSize: 'calc(14px * var(--fs-scale-body, 1))',
     fontFamily: 'inherit',
     outline: 'none',
-    color: '#111827',
-    background: 'white',
+    color: isDarkActive ? '#f9fafb' : '#111827',
+    background: isDarkActive ? '#1f2937' : 'white',
     boxSizing: 'border-box',
-    transition: 'border-color 0.15s',
+    transition: 'border-color 0.15s, background 0.15s, color 0.15s',
   };
 
   if (showTakeoff) {
@@ -230,8 +250,36 @@ export default function LoginPage(): React.ReactElement {
         overflow: 'hidden',
       }}
     >
-      {/* Language dropdown */}
-      <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
+      {/* Top right actions: Theme toggle & Language dropdown */}
+      <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={isDarkActive ? t('nav.lightMode') : t('nav.darkMode')}
+          title={isDarkActive ? t('nav.lightMode') : t('nav.darkMode')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 32,
+            height: 32,
+            borderRadius: 99,
+            background: isDarkActive ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+            border: 'none',
+            color: isDarkActive ? '#f3f4f6' : '#374151',
+            cursor: 'pointer',
+            transition: 'background 0.15s, color 0.15s',
+          }}
+          onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) =>
+            (e.currentTarget.style.background = isDarkActive ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.1)')
+          }
+          onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) =>
+            (e.currentTarget.style.background = isDarkActive ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)')
+          }
+        >
+          {isDarkActive ? <Sun size={15} /> : <Moon size={15} />}
+        </button>
+
         <div style={{ position: 'relative' }}>
           <button type="button"
             onClick={(e) => {
@@ -247,20 +295,20 @@ export default function LoginPage(): React.ReactElement {
               gap: 6,
               padding: '6px 12px',
               borderRadius: 99,
-              background: 'rgba(0,0,0,0.06)',
+              background: isDarkActive ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
               border: 'none',
               fontSize: 'calc(13px * var(--fs-scale-body, 1))',
               fontWeight: 500,
-              color: '#374151',
+              color: isDarkActive ? '#f3f4f6' : '#374151',
               cursor: 'pointer',
               fontFamily: 'inherit',
               transition: 'background 0.15s, color 0.15s',
             }}
             onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) =>
-              (e.currentTarget.style.background = 'rgba(0,0,0,0.1)')
+              (e.currentTarget.style.background = isDarkActive ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.1)')
             }
             onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) =>
-              (e.currentTarget.style.background = 'rgba(0,0,0,0.06)')
+              (e.currentTarget.style.background = isDarkActive ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)')
             }
           >
             <Globe size={14} />
@@ -286,10 +334,10 @@ export default function LoginPage(): React.ReactElement {
                 top: '100%',
                 right: 0,
                 marginTop: 4,
-                background: 'white',
+                background: isDarkActive ? '#1f2937' : 'white',
                 borderRadius: 12,
-                boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
-                border: '1px solid rgba(0,0,0,0.08)',
+                boxShadow: isDarkActive ? '0 4px 24px rgba(0,0,0,0.45)' : '0 4px 24px rgba(0,0,0,0.12)',
+                border: isDarkActive ? '1px solid #374151' : '1px solid rgba(0,0,0,0.08)',
                 minWidth: 190,
                 maxHeight: 320,
                 overflowY: 'auto',
@@ -310,8 +358,8 @@ export default function LoginPage(): React.ReactElement {
                     textAlign: 'left',
                     padding: '9px 16px',
                     border: 'none',
-                    background: value === language ? 'rgba(99,102,241,0.08)' : 'transparent',
-                    color: value === language ? '#4f46e5' : '#374151',
+                    background: value === language ? (isDarkActive ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.08)') : 'transparent',
+                    color: value === language ? '#818cf8' : (isDarkActive ? '#e5e7eb' : '#374151'),
                     fontWeight: value === language ? 600 : 400,
                     fontSize: 'calc(14px * var(--fs-scale-body, 1))',
                     cursor: 'pointer',
@@ -319,7 +367,7 @@ export default function LoginPage(): React.ReactElement {
                     transition: 'background 0.1s',
                   }}
                   onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                    if (value !== language) e.currentTarget.style.background = 'rgba(0,0,0,0.04)';
+                    if (value !== language) e.currentTarget.style.background = isDarkActive ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
                   }}
                   onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
                     if (value !== language) e.currentTarget.style.background = 'transparent';
@@ -330,6 +378,7 @@ export default function LoginPage(): React.ReactElement {
               ))}
             </div>
           )}
+        </div>
       </div>
 
       {/* Left — branding */}
@@ -448,7 +497,7 @@ export default function LoginPage(): React.ReactElement {
           alignItems: 'center',
           justifyContent: 'center',
           padding: 'clamp(16px, 3vh, 32px) 24px',
-          background: '#f9fafb',
+          background: isDarkActive ? '#090d16' : '#f9fafb',
           overflowY: 'auto',
           boxSizing: 'border-box',
           transition: 'background 0.2s',
@@ -467,7 +516,7 @@ export default function LoginPage(): React.ReactElement {
             className="mobile-logo"
           >
             <style>{`@media(min-width:1024px){.mobile-logo{display:none!important}}`}</style>
-            <img src="/logo-dark.svg" alt="TREK" style={{ height: 'clamp(36px, 4.5vh, 46px)' }} />
+            <img src={isDarkActive ? '/logo-light.svg' : '/logo-dark.svg'} alt="TREK" style={{ height: 'clamp(36px, 4.5vh, 46px)' }} />
             <p
               style={{
                 margin: 0,
@@ -484,11 +533,11 @@ export default function LoginPage(): React.ReactElement {
 
           <div
             style={{
-              background: 'white',
+              background: isDarkActive ? '#111827' : 'white',
               borderRadius: 20,
-              border: '1px solid #e5e7eb',
+              border: isDarkActive ? '1px solid #1f2937' : '1px solid #e5e7eb',
               padding: 'clamp(20px, 3.2vh, 32px) clamp(20px, 3vw, 32px)',
-              boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+              boxShadow: isDarkActive ? '0 4px 24px rgba(0,0,0,0.45)' : '0 2px 16px rgba(0,0,0,0.06)',
               transition: 'background 0.2s, border-color 0.2s',
             }}
           >
@@ -499,7 +548,7 @@ export default function LoginPage(): React.ReactElement {
                     margin: '0 0 4px',
                     fontSize: 'calc(22px * var(--fs-scale-title, 1))',
                     fontWeight: 800,
-                    color: '#111827',
+                    color: isDarkActive ? '#f9fafb' : '#111827',
                   }}
                 >
                   {t('login.title')}
@@ -564,7 +613,7 @@ export default function LoginPage(): React.ReactElement {
                     margin: '0 0 4px',
                     fontSize: 'calc(22px * var(--fs-scale-title, 1))',
                     fontWeight: 800,
-                    color: '#111827',
+                    color: isDarkActive ? '#f9fafb' : '#111827',
                   }}
                 >
                   {passwordChangeStep
@@ -796,7 +845,7 @@ export default function LoginPage(): React.ReactElement {
                           display: 'block',
                           fontSize: 'calc(12.5px * var(--fs-scale-body, 1))',
                           fontWeight: 600,
-                          color: '#374151',
+                          color: isDarkActive ? '#e5e7eb' : '#374151',
                           marginBottom: 6,
                         }}
                       >
@@ -822,8 +871,8 @@ export default function LoginPage(): React.ReactElement {
                           autoFocus
                           placeholder={t('login.username')}
                           style={inputBase}
-                          onFocus={(e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = '#111827')}
-                          onBlur={(e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = '#e5e7eb')}
+                          onFocus={(e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = isDarkActive ? '#818cf8' : '#111827')}
+                          onBlur={(e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = isDarkActive ? '#374151' : '#e5e7eb')}
                         />
                       </div>
                       <div
@@ -846,7 +895,7 @@ export default function LoginPage(): React.ReactElement {
                             onClick={() => setRememberMe(!rememberMe)}
                             style={{
                               cursor: 'pointer',
-                              color: '#374151',
+                              color: isDarkActive ? '#d1d5db' : '#374151',
                               fontSize: 'calc(12.5px * var(--fs-scale-body, 1))',
                               fontWeight: 500,
                               userSelect: 'none',
@@ -866,7 +915,7 @@ export default function LoginPage(): React.ReactElement {
                       marginTop: 4,
                       width: '100%',
                       padding: '12px',
-                      background: '#111827',
+                      background: isDarkActive ? '#4f46e5' : '#111827',
                       color: 'white',
                       border: 'none',
                       borderRadius: 12,
@@ -882,10 +931,10 @@ export default function LoginPage(): React.ReactElement {
                       transition: 'opacity 0.15s, background 0.15s',
                     }}
                     onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                      if (!isLoading) e.currentTarget.style.background = '#1f2937';
+                      if (!isLoading) e.currentTarget.style.background = isDarkActive ? '#4338ca' : '#1f2937';
                     }}
                     onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) =>
-                      (e.currentTarget.style.background = '#111827')
+                      (e.currentTarget.style.background = isDarkActive ? '#4f46e5' : '#111827')
                     }
                   >
                     {isLoading ? (
@@ -926,11 +975,11 @@ export default function LoginPage(): React.ReactElement {
           {appConfig?.oidc_configured && appConfig?.oidc_login && !oidcOnly && (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-                <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+                <div style={{ flex: 1, height: 1, background: isDarkActive ? '#374151' : '#e5e7eb' }} />
                 <span style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))', color: '#9ca3af' }}>
                   {t('common.or')}
                 </span>
-                <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+                <div style={{ flex: 1, height: 1, background: isDarkActive ? '#374151' : '#e5e7eb' }} />
               </div>
               <a
                 onClick={clearSignedOut}
@@ -945,9 +994,9 @@ export default function LoginPage(): React.ReactElement {
                   marginTop: 10,
                   width: '100%',
                   padding: '11px 12px',
-                  background: 'white',
-                  color: '#374151',
-                  border: '1px solid #d1d5db',
+                  background: isDarkActive ? '#1f2937' : 'white',
+                  color: isDarkActive ? '#e5e7eb' : '#374151',
+                  border: isDarkActive ? '1px solid #374151' : '1px solid #d1d5db',
                   borderRadius: 12,
                   fontSize: 'calc(14px * var(--fs-scale-body, 1))',
                   fontWeight: 600,
@@ -963,12 +1012,12 @@ export default function LoginPage(): React.ReactElement {
                   boxSizing: 'border-box',
                 }}
                 onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                  e.currentTarget.style.background = '#f9fafb';
-                  e.currentTarget.style.borderColor = '#9ca3af';
+                  e.currentTarget.style.background = isDarkActive ? '#374151' : '#f9fafb';
+                  e.currentTarget.style.borderColor = isDarkActive ? '#4b5563' : '#9ca3af';
                 }}
                 onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                  e.currentTarget.style.background = 'white';
-                  e.currentTarget.style.borderColor = '#d1d5db';
+                  e.currentTarget.style.background = isDarkActive ? '#1f2937' : 'white';
+                  e.currentTarget.style.borderColor = isDarkActive ? '#374151' : '#d1d5db';
                 }}
               >
                 <Shield size={16} />
@@ -982,11 +1031,11 @@ export default function LoginPage(): React.ReactElement {
             <>
               {!oidcButtonShown && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-                  <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+                  <div style={{ flex: 1, height: 1, background: isDarkActive ? '#374151' : '#e5e7eb' }} />
                   <span style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))', color: '#9ca3af' }}>
                     {t('common.or')}
                   </span>
-                  <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+                  <div style={{ flex: 1, height: 1, background: isDarkActive ? '#374151' : '#e5e7eb' }} />
                 </div>
               )}
               <button
@@ -997,9 +1046,9 @@ export default function LoginPage(): React.ReactElement {
                   marginTop: 10,
                   width: '100%',
                   padding: '11px 12px',
-                  background: 'white',
-                  color: '#374151',
-                  border: '1px solid #d1d5db',
+                  background: isDarkActive ? '#1f2937' : 'white',
+                  color: isDarkActive ? '#e5e7eb' : '#374151',
+                  border: isDarkActive ? '1px solid #374151' : '1px solid #d1d5db',
                   borderRadius: 12,
                   fontSize: 'calc(14px * var(--fs-scale-body, 1))',
                   fontWeight: 600,
@@ -1016,13 +1065,13 @@ export default function LoginPage(): React.ReactElement {
                 }}
                 onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
                   if (!isLoading) {
-                    e.currentTarget.style.background = '#f9fafb';
-                    e.currentTarget.style.borderColor = '#9ca3af';
+                    e.currentTarget.style.background = isDarkActive ? '#374151' : '#f9fafb';
+                    e.currentTarget.style.borderColor = isDarkActive ? '#4b5563' : '#9ca3af';
                   }
                 }}
                 onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  e.currentTarget.style.background = 'white';
-                  e.currentTarget.style.borderColor = '#d1d5db';
+                  e.currentTarget.style.background = isDarkActive ? '#1f2937' : 'white';
+                  e.currentTarget.style.borderColor = isDarkActive ? '#374151' : '#d1d5db';
                 }}
               >
                 <Fingerprint size={16} />

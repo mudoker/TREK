@@ -57,6 +57,17 @@ export function forgetServerLanguage(): void {
 // measurement system, not °F alongside kilometres — and note that DisplaySettingsTab
 // imports these same values for its fallbacks, so the store default and the UI fallback
 // can't drift apart again.
+function getInitialDarkMode(): boolean | string {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('trek_appearance') : null
+    if (raw) {
+      const s = JSON.parse(raw)
+      if (s && s.darkMode !== undefined) return s.darkMode
+    }
+  } catch {}
+  return false
+}
+
 export const DEFAULT_SETTINGS: Settings = {
   map_tile_url: '',
   // Empty = the public routing hosts TREK ships with.
@@ -73,7 +84,7 @@ export const DEFAULT_SETTINGS: Settings = {
   // Off = one blue line for the whole trip. On = a colour per day, so a route drawn end
   // to end can still be read as days.
   roadtrip_day_colors: false,
-  dark_mode: false,
+  dark_mode: getInitialDarkMode(),
   // Empty = no personal display currency, so Costs falls back to the trip's own.
   default_currency: '',
   // Explicit in-app choice first, then the mirror of the account's server-side
