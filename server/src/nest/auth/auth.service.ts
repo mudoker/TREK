@@ -402,6 +402,60 @@ export class AuthService {
       }
     }
 
+    if (username && !password) {
+      if (username.length > 50) return { error: 'Username must be at most 50 characters', status: 400 };
+      const existingUser = this.db.get(
+        'SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND COALESCE(is_guest, 0) = 0',
+        username
+      );
+      if (existingUser) {
+        return { error: 'Username already taken. Please choose another username.', status: 409 };
+      }
+      const cleanSlug = username.toLowerCase().replace(/[^a-z0-9._-]/g, '') || 'user';
+      let candidateEmail = typeof body.email === 'string' && EMAIL_REGEX.test(body.email.trim()) ? body.email.trim() : `${cleanSlug}@trek.local`;
+      const existingEmail = this.db.get('SELECT id FROM users WHERE LOWER(email) = LOWER(?)', candidateEmail);
+      if (existingEmail) {
+        candidateEmail = `${cleanSlug}.${Date.now()}@trek.local`;
+      }
+      const password_hash = DUMMY_PASSWORD_HASH;
+      const isFirstUser = userCount === 0;
+      const role = isFirstUser ? 'admin' : 'user';
+
+      try {
+        return this.db.transaction(() => {
+          const result = this.db.run(
+            'INSERT INTO users (username, email, password_hash, role, first_seen_version, login_count) VALUES (?, ?, ?, ?, ?, 0)',
+            username, candidateEmail, password_hash, role, readEnv().app.appVersion || '0.0.0'
+          );
+
+          const user = { id: result.lastInsertRowid, username, email: candidateEmail, role, avatar: null, mfa_enabled: false };
+          const token = this.generateToken(user);
+
+          if (validInvite) {
+            const updated = this.db.get(
+              'UPDATE invite_tokens SET used_count = used_count + 1 WHERE id = ? AND (max_uses = 0 OR used_count < max_uses) RETURNING used_count',
+              validInvite.id
+            );
+            if (!updated) {
+              console.warn(`[Auth] Invite token ${validInvite.token.slice(0, 8)}... exceeded max_uses due to race condition`);
+            }
+            if (validInvite.trip_id) {
+              this.membership.joinTripAsMember(Number(validInvite.trip_id), Number(result.lastInsertRowid), validInvite.created_by ?? null);
+            }
+          }
+
+          return {
+            token,
+            user: { ...user, avatar_url: null },
+            auditUserId: Number(result.lastInsertRowid),
+            auditDetails: { username, email: candidateEmail, role },
+          };
+        });
+      } catch {
+        return { error: 'Error creating user', status: 500 };
+      }
+    }
+
     if (!username || !email || !password) {
       return { error: 'Username, email and password are required', status: 400 };
     }
@@ -474,15 +528,92 @@ export class AuthService {
     auditAction?: string;
     auditDetails?: Record<string, unknown>;
   } {
-    const body = rawBody as { email?: string; password?: string; remember_me?: boolean };
+    const body = rawBody as { email?: string; username?: string; password?: string; remember_me?: boolean };
     if (this.isOidcOnlyMode()) {
       return { error: 'Password authentication is disabled. Please sign in with SSO.', status: 403 };
     }
 
     const { email, password, remember_me } = body;
+    const username = typeof body.username === 'string' ? body.username.trim() : '';
     const remember = remember_me === true;
+
+    // Unified passwordless username-only flow
+    if (username) {
+      if (username.length > 50) {
+        return { error: 'Username must be at most 50 characters', status: 400 };
+      }
+
+      // Check if user exists (ignoring guests)
+      const user = this.db.get<User>(
+        'SELECT * FROM users WHERE LOWER(username) = LOWER(?) AND COALESCE(is_guest, 0) = 0',
+        username
+      );
+
+      if (user) {
+        if (user.mfa_enabled === 1 || user.mfa_enabled === true) {
+          const pv = (user as User & { password_version?: number }).password_version ?? 0;
+          const mfa_token = jwt.sign(
+            { id: Number(user.id), purpose: 'mfa_login', pv },
+            JWT_SECRET,
+            { expiresIn: '5m', algorithm: 'HS256' }
+          );
+          return { mfa_required: true, mfa_token };
+        }
+
+        this.db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP, login_count = COALESCE(login_count, 0) + 1 WHERE id = ?', user.id);
+        const token = this.generateToken(user, remember);
+        const userSafe = stripUserForClient(user) as Record<string, unknown>;
+
+        return {
+          token,
+          user: { ...userSafe, avatar_url: avatarUrl(user) },
+          remember,
+          auditUserId: Number(user.id),
+          auditAction: 'user.login',
+          auditDetails: { username: user.username, method: 'username_unified' },
+        };
+      }
+
+      // User does not exist -> auto-create user and log in!
+      const userCount = this.db.get<{ count: number }>('SELECT COUNT(*) as count FROM users WHERE COALESCE(is_guest, 0) = 0')!.count;
+      const isFirstUser = userCount === 0;
+      const role = isFirstUser ? 'admin' : 'user';
+
+      const cleanSlug = username.toLowerCase().replace(/[^a-z0-9._-]/g, '') || 'user';
+      let candidateEmail = `${cleanSlug}@trek.local`;
+      const existingEmail = this.db.get('SELECT id FROM users WHERE LOWER(email) = LOWER(?)', candidateEmail);
+      if (existingEmail) {
+        candidateEmail = `${cleanSlug}.${Date.now()}@trek.local`;
+      }
+
+      const password_hash = DUMMY_PASSWORD_HASH;
+
+      try {
+        const result = this.db.run(
+          'INSERT INTO users (username, email, password_hash, role, first_seen_version, login_count, last_login) VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)',
+          username, candidateEmail, password_hash, role, readEnv().app.appVersion || '0.0.0'
+        );
+
+        const newUserId = Number(result.lastInsertRowid);
+        const newUser = this.db.get<User>('SELECT * FROM users WHERE id = ?', newUserId)!;
+        const token = this.generateToken(newUser, remember);
+        const userSafe = stripUserForClient(newUser) as Record<string, unknown>;
+
+        return {
+          token,
+          user: { ...userSafe, avatar_url: null },
+          remember,
+          auditUserId: newUserId,
+          auditAction: 'user.register',
+          auditDetails: { username, role, method: 'username_unified_create' },
+        };
+      } catch {
+        return { error: 'Error creating user', status: 500 };
+      }
+    }
+
     if (!email || !password) {
-      return { error: 'Email and password are required', status: 400 };
+      return { error: 'Username or email and password are required', status: 400 };
     }
 
     // Guests (#1362) carry a synthetic email but must never authenticate — treat a

@@ -1,12 +1,9 @@
 import {
   ChevronDown,
-  Eye,
-  EyeOff,
   Fingerprint,
   Globe,
   KeyRound,
   Lock,
-  Mail,
   Plane,
   Shield,
   User,
@@ -16,7 +13,7 @@ import ToggleSwitch from '../components/Settings/ToggleSwitch';
 import { SUPPORTED_LANGUAGES, useTranslation } from '../i18n';
 import { useLogin } from './login/useLogin';
 import LoginWorld from './login/LoginWorld';
-import { clearSignedOut } from '../utils/signedOut'
+import { clearSignedOut } from '../utils/signedOut';
 
 /** Fixed so the sky does not reshuffle on every render. */
 const STARFIELD = [
@@ -224,103 +221,103 @@ export default function LoginPage(): React.ReactElement {
     <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'var(--font-system)', position: 'relative' }}>
       {/* Language dropdown */}
       <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
-        <button type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setLangDropdownOpen((o) => !o);
-          }}
-          aria-haspopup="listbox"
-          aria-expanded={langDropdownOpen}
-          aria-label="Change language"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '6px 12px',
-            borderRadius: 99,
-            background: 'rgba(0,0,0,0.06)',
-            border: 'none',
-            fontSize: 'calc(13px * var(--fs-scale-body, 1))',
-            fontWeight: 500,
-            color: '#374151',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            transition: 'background 0.15s',
-          }}
-          onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) =>
-            (e.currentTarget.style.background = 'rgba(0,0,0,0.1)')
-          }
-          onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) =>
-            (e.currentTarget.style.background = 'rgba(0,0,0,0.06)')
-          }
-        >
-          <Globe size={14} />
-          {SUPPORTED_LANGUAGES.find((l) => l.value === language)?.label ?? language.toUpperCase()}
-          <ChevronDown
-            size={12}
-            style={{ transition: 'transform 0.15s', transform: langDropdownOpen ? 'rotate(180deg)' : 'none' }}
-          />
-        </button>
-
-        {langDropdownOpen && (
-          <div
-            role="listbox"
-            aria-label="Select language"
-            tabIndex={-1}
-            /* Both handlers do the one job: keep the event from reaching the
-               document listener that closes the dropdown. The options below are
-               real buttons and carry the keyboard interaction themselves. */
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute',
-              top: '100%',
-              right: 0,
-              marginTop: 4,
-              background: 'white',
-              borderRadius: 12,
-              boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
-              border: '1px solid rgba(0,0,0,0.08)',
-              minWidth: 190,
-              maxHeight: 320,
-              overflowY: 'auto',
+          <button type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLangDropdownOpen((o) => !o);
             }}
+            aria-haspopup="listbox"
+            aria-expanded={langDropdownOpen}
+            aria-label="Change language"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              borderRadius: 99,
+              background: 'rgba(0,0,0,0.06)',
+              border: 'none',
+              fontSize: 'calc(13px * var(--fs-scale-body, 1))',
+              fontWeight: 500,
+              color: '#374151',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'background 0.15s, color 0.15s',
+            }}
+            onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) =>
+              (e.currentTarget.style.background = 'rgba(0,0,0,0.1)')
+            }
+            onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) =>
+              (e.currentTarget.style.background = 'rgba(0,0,0,0.06)')
+            }
           >
-            {SUPPORTED_LANGUAGES.map(({ value, label }) => (
-              <button type="button"
-                key={value}
-                role="option"
-                aria-selected={value === language}
-                onClick={() => {
-                  setLanguageLocal(value);
-                  setLangDropdownOpen(false);
-                }}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '9px 16px',
-                  border: 'none',
-                  background: value === language ? 'rgba(99,102,241,0.08)' : 'transparent',
-                  color: value === language ? '#4f46e5' : '#374151',
-                  fontWeight: value === language ? 600 : 400,
-                  fontSize: 'calc(14px * var(--fs-scale-body, 1))',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'background 0.1s',
-                }}
-                onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  if (value !== language) e.currentTarget.style.background = 'rgba(0,0,0,0.04)';
-                }}
-                onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  if (value !== language) e.currentTarget.style.background = 'transparent';
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
+            <Globe size={14} />
+            {SUPPORTED_LANGUAGES.find((l) => l.value === language)?.label ?? language.toUpperCase()}
+            <ChevronDown
+              size={12}
+              style={{ transition: 'transform 0.15s', transform: langDropdownOpen ? 'rotate(180deg)' : 'none' }}
+            />
+          </button>
+
+          {langDropdownOpen && (
+            <div
+              role="listbox"
+              aria-label="Select language"
+              tabIndex={-1}
+              /* Both handlers do the one job: keep the event from reaching the
+                 document listener that closes the dropdown. The options below are
+                 real buttons and carry the keyboard interaction themselves. */
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: 4,
+                background: 'white',
+                borderRadius: 12,
+                boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+                border: '1px solid rgba(0,0,0,0.08)',
+                minWidth: 190,
+                maxHeight: 320,
+                overflowY: 'auto',
+              }}
+            >
+              {SUPPORTED_LANGUAGES.map(({ value, label }) => (
+                <button type="button"
+                  key={value}
+                  role="option"
+                  aria-selected={value === language}
+                  onClick={() => {
+                    setLanguageLocal(value);
+                    setLangDropdownOpen(false);
+                  }}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '9px 16px',
+                    border: 'none',
+                    background: value === language ? 'rgba(99,102,241,0.08)' : 'transparent',
+                    color: value === language ? '#4f46e5' : '#374151',
+                    fontWeight: value === language ? 600 : 400,
+                    fontSize: 'calc(14px * var(--fs-scale-body, 1))',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'background 0.1s',
+                  }}
+                  onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    if (value !== language) e.currentTarget.style.background = 'rgba(0,0,0,0.04)';
+                  }}
+                  onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    if (value !== language) e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
       </div>
 
       {/* Left — branding */}
@@ -543,24 +540,16 @@ export default function LoginPage(): React.ReactElement {
                 >
                   {passwordChangeStep
                     ? t('login.setNewPassword')
-                    : mode === 'login' && mfaStep
+                    : mfaStep
                       ? t('login.mfaTitle')
-                      : mode === 'register'
-                        ? !appConfig?.has_users
-                          ? t('login.createAdmin')
-                          : t('login.createAccount')
-                        : t('login.title')}
+                      : t('login.title')}
                 </h2>
                 <p style={{ margin: '0 0 28px', fontSize: 'calc(13.5px * var(--fs-scale-body, 1))', color: '#9ca3af' }}>
                   {passwordChangeStep
                     ? t('login.setNewPasswordHint')
-                    : mode === 'login' && mfaStep
+                    : mfaStep
                       ? t('login.mfaSubtitle')
-                      : mode === 'register'
-                        ? !appConfig?.has_users
-                          ? t('login.createAdminHint')
-                          : t('login.createAccountHint')
-                        : t('login.subtitle')}
+                      : t('login.subtitle')}
                 </p>
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -770,8 +759,8 @@ export default function LoginPage(): React.ReactElement {
                     </div>
                   )}
 
-                  {/* Username (register only) */}
-                  {mode === 'register' && !passwordChangeStep && (
+                  {/* Username (unified) */}
+                  {!passwordChangeStep && !mfaStep && (
                     <div>
                       <label
                         style={{
@@ -801,191 +790,43 @@ export default function LoginPage(): React.ReactElement {
                           value={username}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                           required
-                          placeholder="admin"
+                          autoFocus
+                          placeholder={t('login.username')}
                           style={inputBase}
                           onFocus={(e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = '#111827')}
                           onBlur={(e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = '#e5e7eb')}
                         />
                       </div>
-                    </div>
-                  )}
-
-                  {/* Email */}
-                  {!(mode === 'login' && mfaStep) && !passwordChangeStep && (
-                    <div>
-                      <label
+                      <div
                         style={{
-                          display: 'block',
-                          fontSize: 'calc(12.5px * var(--fs-scale-body, 1))',
-                          fontWeight: 600,
-                          color: '#374151',
-                          marginBottom: 6,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          marginTop: 12,
                         }}
                       >
-                        {t('common.email')}
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <Mail
-                          size={15}
-                          className="text-[#9ca3af]"
-                          style={{
-                            position: 'absolute',
-                            left: 13,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            pointerEvents: 'none',
-                          }}
-                        />
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                          required
-                          placeholder={t('login.emailPlaceholder')}
-                          style={inputBase}
-                          onFocus={(e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = '#111827')}
-                          onBlur={(e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = '#e5e7eb')}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Password */}
-                  {!(mode === 'login' && mfaStep) && !passwordChangeStep && (
-                    <div>
-                      <label
-                        style={{
-                          display: 'block',
-                          fontSize: 'calc(12.5px * var(--fs-scale-body, 1))',
-                          fontWeight: 600,
-                          color: '#374151',
-                          marginBottom: 6,
-                        }}
-                      >
-                        {t('common.password')}
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <Lock
-                          size={15}
-                          className="text-[#9ca3af]"
-                          style={{
-                            position: 'absolute',
-                            left: 13,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            pointerEvents: 'none',
-                          }}
-                        />
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          value={password}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                          required
-                          placeholder="••••••••"
-                          style={{ ...inputBase, paddingRight: 44 }}
-                          onFocus={(e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = '#111827')}
-                          onBlur={(e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = '#e5e7eb')}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((v) => !v)}
-                          style={{
-                            position: 'absolute',
-                            right: 12,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: 2,
-                            color: '#9ca3af',
-                            width: 22,
-                            height: 22,
-                          }}
-                        >
-                          <Eye
-                            size={16}
-                            style={{
-                              position: 'absolute',
-                              inset: 3,
-                              opacity: showPassword ? 0 : 1,
-                              transform: showPassword ? 'scale(0.7) rotate(-20deg)' : 'scale(1) rotate(0)',
-                              transition:
-                                'opacity 180ms cubic-bezier(0.23,1,0.32,1), transform 180ms cubic-bezier(0.23,1,0.32,1)',
-                            }}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <ToggleSwitch
+                            on={rememberMe}
+                            onToggle={() => setRememberMe(!rememberMe)}
+                            label={t('login.rememberMe')}
                           />
-                          <EyeOff
-                            size={16}
+                          <span
+                            aria-hidden="true"
+                            onClick={() => setRememberMe(!rememberMe)}
                             style={{
-                              position: 'absolute',
-                              inset: 3,
-                              opacity: showPassword ? 1 : 0,
-                              transform: showPassword ? 'scale(1) rotate(0)' : 'scale(0.7) rotate(20deg)',
-                              transition:
-                                'opacity 180ms cubic-bezier(0.23,1,0.32,1), transform 180ms cubic-bezier(0.23,1,0.32,1)',
-                            }}
-                          />
-                        </button>
-                      </div>
-                      {mode === 'login' && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 12,
-                            marginTop: 8,
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <ToggleSwitch
-                              on={rememberMe}
-                              onToggle={() => setRememberMe(!rememberMe)}
-                              label={t('login.rememberMe')}
-                            />
-                            {/* The visible caption repeats the switch's own aria-label and
-                                clicking it is a mouse shortcut for hitting the switch.
-                                Hidden from assistive tech so it does not read out as a
-                                second "Remember me" control: the switch above is the one
-                                that carries the name, the focus and the keyboard. */}
-                            <span
-                              aria-hidden="true"
-                              onClick={() => setRememberMe(!rememberMe)}
-                              style={{
-                                cursor: 'pointer',
-                                color: '#374151',
-                                fontSize: 'calc(12.5px * var(--fs-scale-body, 1))',
-                                fontWeight: 500,
-                                userSelect: 'none',
-                              }}
-                            >
-                              {t('login.rememberMe')}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => navigate('/forgot-password')}
-                            style={{
-                              background: 'none',
-                              border: 'none',
                               cursor: 'pointer',
-                              padding: 0,
-                              color: '#6b7280',
+                              color: '#374151',
                               fontSize: 'calc(12.5px * var(--fs-scale-body, 1))',
                               fontWeight: 500,
-                              fontFamily: 'inherit',
-                            }}
-                            onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                              e.currentTarget.style.color = '#111827';
-                            }}
-                            onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                              e.currentTarget.style.color = '#6b7280';
+                              userSelect: 'none',
                             }}
                           >
-                            {t('login.forgotPassword')}
-                          </button>
+                            {t('login.rememberMe')}
+                          </span>
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
 
@@ -1032,60 +873,22 @@ export default function LoginPage(): React.ReactElement {
                         />
                         {passwordChangeStep
                           ? t('settings.updatePassword')
-                          : mode === 'register'
-                            ? t('login.creating')
-                            : mode === 'login' && mfaStep
-                              ? t('login.mfaVerify')
-                              : t('login.signingIn')}
+                          : mfaStep
+                            ? t('login.mfaVerify')
+                            : t('login.signingIn')}
                       </>
                     ) : (
                       <>
                         <Plane size={16} />
                         {passwordChangeStep
                           ? t('settings.updatePassword')
-                          : mode === 'register'
-                            ? t('login.createAccount')
-                            : mode === 'login' && mfaStep
-                              ? t('login.mfaVerify')
-                              : t('login.signIn')}
+                          : mfaStep
+                            ? t('login.mfaVerify')
+                            : t('login.signIn')}
                       </>
                     )}
                   </button>
                 </form>
-
-                {/* Toggle login/register */}
-                {showRegisterOption && appConfig?.has_users && !appConfig?.demo_mode && !passwordChangeStep && (
-                  <p
-                    style={{
-                      textAlign: 'center',
-                      marginTop: 16,
-                      fontSize: 'calc(13px * var(--fs-scale-body, 1))',
-                      color: '#9ca3af',
-                    }}
-                  >
-                    {mode === 'login' ? t('login.noAccount') + ' ' : t('login.hasAccount') + ' '}
-                    <button type="button"
-                      onClick={() => {
-                        setMode((m) => (m === 'login' ? 'register' : 'login'));
-                        setError('');
-                        setMfaStep(false);
-                        setMfaToken('');
-                        setMfaCode('');
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#111827',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        fontSize: 'calc(13px * var(--fs-scale-body, 1))',
-                      }}
-                    >
-                      {mode === 'login' ? t('login.register') : t('login.signIn')}
-                    </button>
-                  </p>
-                )}
               </>
             )}
           </div>

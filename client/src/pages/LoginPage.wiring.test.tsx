@@ -17,8 +17,7 @@ vi.mock('./login/LoginWorld', () => ({
   default: ({ variant }: { variant?: string }) => <div data-testid="login-world" data-variant={variant ?? 'ambient'} />,
 }));
 
-const EMAIL_PLACEHOLDER = 'your@email.com';
-const PASSWORD_PLACEHOLDER = '••••••••';
+const USERNAME_PLACEHOLDER = 'Username';
 
 function makeFixture() {
   return {
@@ -111,7 +110,7 @@ describe('LoginPage — takeoff', () => {
     expect(document.querySelector('.takeoff-overlay')).toBeInTheDocument();
     expect(screen.getByTestId('login-world')).toHaveAttribute('data-variant', 'takeoff');
     expect(screen.getByAltText('TREK')).toHaveAttribute('src', '/logo-light.svg');
-    expect(screen.queryByPlaceholderText(EMAIL_PLACEHOLDER)).toBeNull();
+    expect(screen.queryByPlaceholderText(USERNAME_PLACEHOLDER)).toBeNull();
   });
 });
 
@@ -195,13 +194,14 @@ describe('LoginPage — language switcher', () => {
   });
 });
 
+
 describe('LoginPage — OIDC-only mode', () => {
   it('FE-LOGIN-WIRE-008: offers only the SSO link, named after the provider', () => {
     fixture.oidcOnly = true;
     fixture.appConfig.oidc_display_name = 'Authentik';
     renderPage();
 
-    expect(screen.queryByPlaceholderText(EMAIL_PLACEHOLDER)).toBeNull();
+    expect(screen.queryByPlaceholderText(USERNAME_PLACEHOLDER)).toBeNull();
     const link = screen.getByRole('link', { name: /sign in with authentik/i });
     // No switch in OIDC-only mode: the link always asks for the remembered lifetime.
     expect(link).toHaveAttribute('href', '/api/auth/oidc/login?remember=1');
@@ -240,26 +240,19 @@ describe('LoginPage — OIDC-only mode', () => {
   });
 });
 
-describe('LoginPage — password form', () => {
-  it('FE-LOGIN-WIRE-011: the eye button flips the password visibility', () => {
+describe('LoginPage — unified username form', () => {
+  it('FE-LOGIN-WIRE-011: renders username input and captures input', () => {
     renderPage();
-    const input = screen.getByPlaceholderText(PASSWORD_PLACEHOLDER);
-    expect(input).toHaveAttribute('type', 'password');
-
-    const buttons = screen.getAllByRole('button');
-    const toggle = buttons.find((b) => b.getAttribute('type') === 'button' && b.querySelector('svg') && b.style.right === '12px')!;
-    fireEvent.click(toggle);
-
-    const updater = vi.mocked(fixture.setShowPassword).mock.calls[0][0] as (v: boolean) => boolean;
-    expect(updater(false)).toBe(true);
+    const input = screen.getByPlaceholderText(USERNAME_PLACEHOLDER);
+    expect(input).toHaveAttribute('type', 'text');
+    fireEvent.change(input, { target: { value: 'alice' } });
+    expect(fixture.setUsername).toHaveBeenCalledWith('alice');
   });
 
-  it('FE-LOGIN-WIRE-012: showPassword renders the value in clear text', () => {
-    fixture.showPassword = true;
-    fixture.password = 'hunter2';
+  it('FE-LOGIN-WIRE-012: renders username value', () => {
+    fixture.username = 'bob';
     renderPage();
-
-    expect(screen.getByDisplayValue('hunter2')).toHaveAttribute('type', 'text');
+    expect(screen.getByDisplayValue('bob')).toBeInTheDocument();
   });
 
   it('FE-LOGIN-WIRE-013: the remember-me label toggles the switch', () => {
@@ -270,18 +263,6 @@ describe('LoginPage — password form', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Remember me' }));
     expect(fixture.setRememberMe).toHaveBeenCalledTimes(2);
-  });
-
-  it('FE-LOGIN-WIRE-014: the forgot-password link routes and highlights on hover', () => {
-    renderPage();
-    const button = screen.getByRole('button', { name: /forgot password/i });
-
-    const { before, hovered, after } = hoverRoundTrip(button, 'color');
-    expect(hovered).not.toBe(before);
-    expect(after).toBe(before);
-
-    fireEvent.click(button);
-    expect(fixture.navigate).toHaveBeenCalledWith('/forgot-password');
   });
 
   it('FE-LOGIN-WIRE-015: submitting the form goes through the hook', () => {
@@ -323,7 +304,7 @@ describe('LoginPage — MFA step', () => {
     renderPage();
 
     expect(screen.getByText('Two-factor authentication')).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText(EMAIL_PLACEHOLDER)).toBeNull();
+    expect(screen.queryByPlaceholderText(USERNAME_PLACEHOLDER)).toBeNull();
 
     const input = screen.getByPlaceholderText('000000 or XXXX-XXXX');
     fireEvent.change(input, { target: { value: 'abcd-efgh' } });
@@ -361,8 +342,7 @@ describe('LoginPage — forced password change', () => {
     renderPage();
 
     expect(screen.getByText(/You must change your password before you can continue/)).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText(EMAIL_PLACEHOLDER)).toBeNull();
-    expect(screen.queryByPlaceholderText(PASSWORD_PLACEHOLDER)).toBeNull();
+    expect(screen.queryByPlaceholderText(USERNAME_PLACEHOLDER)).toBeNull();
 
     fireEvent.change(screen.getByPlaceholderText('New password'), { target: { value: 'newpassword123' } });
     expect(fixture.setNewPassword).toHaveBeenCalledWith('newpassword123');
@@ -380,19 +360,10 @@ describe('LoginPage — forced password change', () => {
   });
 });
 
-describe('LoginPage — register mode', () => {
-  it('FE-LOGIN-WIRE-023: switching to register resets the pending MFA state', () => {
+describe('LoginPage — unified mode', () => {
+  it('FE-LOGIN-WIRE-023: does not render a separate register button', () => {
     renderPage();
-
-    fireEvent.click(screen.getByRole('button', { name: /^register$/i }));
-
-    const updater = vi.mocked(fixture.setMode).mock.calls[0][0] as (m: 'login' | 'register') => 'login' | 'register';
-    expect(updater('login')).toBe('register');
-    expect(updater('register')).toBe('login');
-    expect(fixture.setError).toHaveBeenCalledWith('');
-    expect(fixture.setMfaStep).toHaveBeenCalledWith(false);
-    expect(fixture.setMfaToken).toHaveBeenCalledWith('');
-    expect(fixture.setMfaCode).toHaveBeenCalledWith('');
+    expect(screen.queryByRole('button', { name: /^register$/i })).toBeNull();
   });
 
   it('FE-LOGIN-WIRE-024: asks for an admin account on a fresh instance', () => {

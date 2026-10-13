@@ -9,20 +9,25 @@ import { z } from 'zod';
  * MFA step, so password fields stay permissive where the service owns the rules.
  */
 export const registerRequestSchema = z.object({
-  email: z.string(),
-  password: z.string(),
+  email: z.string().optional(),
+  password: z.string().optional(),
   username: z.string().optional(),
   invite_token: z.string().optional(),
+}).refine(data => !!(data.username || (data.email && data.password)), {
+  message: 'Username or email + password is required',
 });
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 
 export const loginRequestSchema = z.object({
-  email: z.string(),
-  password: z.string(),
+  email: z.string().optional(),
+  username: z.string().optional(),
+  password: z.string().optional(),
   // "Remember me" — when true the server issues a longer-lived
   // (SESSION_DURATION_REMEMBER) JWT + persistent cookie; when false/absent the
   // session lasts SESSION_DURATION and the cookie is a browser-session cookie.
   remember_me: z.boolean().optional(),
+}).refine(data => !!(data.username || (data.email && data.password)), {
+  message: 'Username or email + password is required',
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 

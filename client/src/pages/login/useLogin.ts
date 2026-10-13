@@ -285,32 +285,32 @@ export function useLogin() {
         takeOff()
         return
       }
-      if (mode === 'register') {
-        if (!username.trim()) { setError(t('login.usernameRequired')); setIsLoading(false); return }
-        if (password.length < 8) { setError(t('login.passwordMinLength')); setIsLoading(false); return }
-        await register(username, email, password, inviteToken || undefined)
-      } else {
-        const result = await login(email, password, rememberMe)
-        if ((result as { insecureCookie?: boolean }).insecureCookie) {
-          // Credentials were correct, but the secure cookie won't survive plain
-          // HTTP — proceeding would just dead-end on "Access token required".
-          setInsecureCookie(true)
-          setIsLoading(false)
-          return
-        }
-        if ('mfa_required' in result && result.mfa_required && 'mfa_token' in result) {
-          setMfaToken(result.mfa_token)
-          setMfaStep(true)
-          setMfaCode('')
-          setIsLoading(false)
-          return
-        }
-        if ('user' in result && result.user?.must_change_password) {
-          setSavedLoginPassword(password)
-          setPasswordChangeStep(true)
-          setIsLoading(false)
-          return
-        }
+      const trimmedUser = username.trim()
+      if (!trimmedUser) {
+        setError(t('login.usernameRequired'))
+        setIsLoading(false)
+        return
+      }
+      const result = await login(trimmedUser, undefined, rememberMe)
+      if ((result as { insecureCookie?: boolean }).insecureCookie) {
+        // Credentials were correct, but the secure cookie won't survive plain
+        // HTTP — proceeding would just dead-end on "Access token required".
+        setInsecureCookie(true)
+        setIsLoading(false)
+        return
+      }
+      if ('mfa_required' in result && result.mfa_required && 'mfa_token' in result) {
+        setMfaToken(result.mfa_token)
+        setMfaStep(true)
+        setMfaCode('')
+        setIsLoading(false)
+        return
+      }
+      if ('user' in result && result.user?.must_change_password) {
+        setSavedLoginPassword(password)
+        setPasswordChangeStep(true)
+        setIsLoading(false)
+        return
       }
       takeOff()
     } catch (err: unknown) {
@@ -319,7 +319,7 @@ export function useLogin() {
     }
   }
 
-  const showRegisterOption = (appConfig?.password_registration || !appConfig?.has_users || inviteValid) && (appConfig?.setup_complete !== false || !appConfig?.has_users)
+  const showRegisterOption = false
 
   // In OIDC-only mode, show a minimal page that redirects directly to the IdP
   const oidcOnly = !appConfig?.password_login && appConfig?.oidc_login && appConfig?.oidc_configured

@@ -67,7 +67,7 @@ interface AuthState {
   /** Server records which search result was picked (admin switch, default off). */
   placeShadowEnabled: boolean
 
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<LoginResult>
+  login: (emailOrUsername: string, password?: string, rememberMe?: boolean) => Promise<LoginResult>
   completeMfaLogin: (mfaToken: string, code: string, rememberMe?: boolean) => Promise<AuthResponse>
   register: (username: string, email: string, password: string, invite_token?: string) => Promise<AuthResponse>
   logout: () => Promise<void>
@@ -148,11 +148,15 @@ export const useAuthStore = create<AuthState>()(
   // Fail-closed: an old server sends no flag and nothing is logged.
   placeShadowEnabled: false,
 
-  login: async (email: string, password: string, rememberMe?: boolean) => {
+  login: async (emailOrUsername: string, password?: string, rememberMe?: boolean) => {
     authSequence++
     set({ isLoading: true, error: null })
     try {
-      const data = await authApi.login({ email, password, remember_me: rememberMe }) as AuthResponse & { mfa_required?: boolean; mfa_token?: string }
+      const payload: { email?: string; username?: string; password?: string; remember_me?: boolean } =
+        password !== undefined && password !== ''
+          ? { email: emailOrUsername, password, remember_me: rememberMe }
+          : { username: emailOrUsername, remember_me: rememberMe }
+      const data = await authApi.login(payload) as AuthResponse & { mfa_required?: boolean; mfa_token?: string }
       if (data.mfa_required && data.mfa_token) {
         set({ isLoading: false, error: null })
         return { mfa_required: true as const, mfa_token: data.mfa_token }

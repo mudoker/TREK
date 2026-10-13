@@ -15,8 +15,7 @@ vi.mock('./login/LoginWorld', () => ({ default: () => null }));
 
 // LoginPage uses inline styles for labels (no htmlFor/id pairing).
 // We find inputs by placeholder text.
-const EMAIL_PLACEHOLDER = 'your@email.com';
-const PASSWORD_PLACEHOLDER = '••••••••';
+const USERNAME_PLACEHOLDER = 'Username';
 
 beforeEach(() => {
   resetAllStores();
@@ -24,13 +23,12 @@ beforeEach(() => {
 
 describe('LoginPage', () => {
   describe('FE-PAGE-LOGIN-001: Renders login form', () => {
-    it('shows email and password inputs', async () => {
+    it('shows username input', async () => {
       render(<LoginPage />);
       // Wait for appConfig to load (useEffect fetches it)
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
-      expect(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER)).toBeInTheDocument();
     });
   });
 
@@ -40,11 +38,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       // On success, takeoff overlay appears
@@ -66,11 +63,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'bad@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'wrongpass');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'baduser');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       await waitFor(() => {
@@ -95,11 +91,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       // While loading, button becomes disabled with spinner text
@@ -124,14 +119,13 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
       const toggle = screen.getByRole('button', { name: /remember me/i });
       expect(toggle).toHaveAttribute('aria-pressed', 'false');
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(toggle);
       expect(toggle).toHaveAttribute('aria-pressed', 'true');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
@@ -142,39 +136,28 @@ describe('LoginPage', () => {
     });
   });
 
-  describe('FE-PAGE-LOGIN-005: Registration toggle visible', () => {
-    it('shows a Register button to switch to registration mode', async () => {
-      // Default appConfig has allow_registration: true, has_users: true
+  describe('FE-PAGE-LOGIN-005: Unified login form', () => {
+    it('does not show a separate register toggle button', async () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        // The register toggle link text appears
-        expect(screen.getByRole('button', { name: /^register$/i })).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
+      expect(screen.queryByRole('button', { name: /^register$/i })).toBeNull();
     });
   });
 
-  describe('FE-PAGE-LOGIN-006: Register creates account', () => {
-    it('switches to register mode and submits registration form', async () => {
+  describe('FE-PAGE-LOGIN-006: Submitting username signs in or creates account', () => {
+    it('submits unified form and triggers takeoff', async () => {
       const user = userEvent.setup();
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /^register$/i })).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /^register$/i }));
-
-      // Username field appears in register mode
-      await waitFor(() => {
-        expect(screen.getByPlaceholderText('admin')).toBeInTheDocument();
-      });
-
-      await user.type(screen.getByPlaceholderText('admin'), 'newuser');
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'new@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
-
-      await user.click(screen.getByRole('button', { name: /create account/i }));
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'newuser');
+      await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       // On success, takeoff animation
       await waitFor(() => {
@@ -249,11 +232,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       // MFA step: the title changes to "Two-factor authentication"
@@ -272,11 +254,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'pass1234');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       // Takeoff animation signals navigation away from login
@@ -300,11 +281,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       await waitFor(() => {
@@ -328,11 +308,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       await waitFor(() => {
@@ -363,11 +342,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       await waitFor(() => {
@@ -401,11 +379,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       await waitFor(() => {
@@ -422,8 +399,8 @@ describe('LoginPage', () => {
     });
   });
 
-  describe('FE-PAGE-LOGIN-015: First-setup mode switches to register when has_users=false', () => {
-    it('shows register form automatically when has_users is false', async () => {
+  describe('FE-PAGE-LOGIN-015: First-setup mode renders username input when has_users=false', () => {
+    it('shows username input when has_users is false', async () => {
       server.use(
         http.get('/api/auth/app-config', () => {
           return HttpResponse.json({
@@ -440,7 +417,7 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('admin')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
     });
   });
@@ -463,7 +440,7 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
       expect(screen.queryByRole('button', { name: /^register$/i })).toBeNull();
@@ -471,7 +448,7 @@ describe('LoginPage', () => {
   });
 
   describe('FE-PAGE-LOGIN-017: OIDC-only mode hides standard login form', () => {
-    it('does not render email/password inputs in oidc_only_mode', async () => {
+    it('does not render username input in oidc_only_mode', async () => {
       server.use(
         http.get('/api/auth/app-config', () => {
           return HttpResponse.json({
@@ -493,8 +470,7 @@ describe('LoginPage', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByPlaceholderText(EMAIL_PLACEHOLDER)).toBeNull();
-        expect(screen.queryByPlaceholderText(PASSWORD_PLACEHOLDER)).toBeNull();
+        expect(screen.queryByPlaceholderText(USERNAME_PLACEHOLDER)).toBeNull();
       });
     });
   });
@@ -519,11 +495,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       await waitFor(() => {
@@ -554,11 +529,10 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'user@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'password123');
+      await user.type(screen.getByPlaceholderText(USERNAME_PLACEHOLDER), 'user');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       await waitFor(() => {
@@ -576,34 +550,25 @@ describe('LoginPage', () => {
     });
   });
 
-  describe('FE-PAGE-LOGIN-020: Register form validates password length', () => {
-    it('shows error when registration password is shorter than 8 characters', async () => {
-      const user = userEvent.setup();
+  describe('FE-PAGE-LOGIN-020: Empty username shows error', () => {
+    it('shows error when username is empty', async () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /^register$/i })).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /^register$/i }));
+      const form = document.querySelector('form')!;
+      fireEvent.submit(form);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('admin')).toBeInTheDocument();
-      });
-
-      await user.type(screen.getByPlaceholderText('admin'), 'newuser');
-      await user.type(screen.getByPlaceholderText(EMAIL_PLACEHOLDER), 'new@example.com');
-      await user.type(screen.getByPlaceholderText(PASSWORD_PLACEHOLDER), 'short');
-      await user.click(screen.getByRole('button', { name: /create account/i }));
-
-      await waitFor(() => {
-        expect(screen.getByText(/at least 8/i)).toBeInTheDocument();
+        expect(screen.getByText(/username is required/i)).toBeInTheDocument();
       });
     });
   });
 
-  describe('FE-PAGE-LOGIN-021: Invite token pre-fills register mode', () => {
-    it('renders register form when invite query param is present', async () => {
+  describe('FE-PAGE-LOGIN-021: Invite token validates and renders form', () => {
+    it('renders login form when invite query param is present', async () => {
       server.use(
         http.get('/api/auth/invite/:token', () => {
           return HttpResponse.json({ valid: true });
@@ -621,7 +586,7 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('admin')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(USERNAME_PLACEHOLDER)).toBeInTheDocument();
       });
 
       Object.defineProperty(window, 'location', {
