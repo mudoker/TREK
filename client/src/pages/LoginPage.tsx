@@ -81,6 +81,7 @@ export default function LoginPage(): React.ReactElement {
     handlePasskeyLogin,
   } = useLogin();
 
+
   const oidcButtonShown = !!(appConfig?.oidc_configured && appConfig?.oidc_login && !oidcOnly);
   const passkeyAvailable = !!(
     appConfig?.passkey_login &&
@@ -218,9 +219,20 @@ export default function LoginPage(): React.ReactElement {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'var(--font-system)', position: 'relative' }}>
+    <div
+      className="login-page-root"
+      style={{
+        height: '100vh',
+        maxHeight: '100vh',
+        display: 'flex',
+        fontFamily: 'var(--font-system)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
       {/* Language dropdown */}
       <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
+        <div style={{ position: 'relative' }}>
           <button type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -325,13 +337,16 @@ export default function LoginPage(): React.ReactElement {
         style={{
           display: 'none',
           width: '55%',
+          height: '100%',
+          maxHeight: '100%',
           background: '#070c1a',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: '60px 48px',
+          padding: 'clamp(24px, 4vh, 48px)',
           position: 'relative',
           overflow: 'hidden',
+          boxSizing: 'border-box',
         }}
         className="lg-panel"
       >
@@ -423,27 +438,40 @@ export default function LoginPage(): React.ReactElement {
 
       {/* Right — form */}
       <div
+        className="login-right-panel"
         style={{
           flex: 1,
+          height: '100%',
+          maxHeight: '100%',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '32px 24px',
+          padding: 'clamp(16px, 3vh, 32px) 24px',
           background: '#f9fafb',
+          overflowY: 'auto',
+          boxSizing: 'border-box',
+          transition: 'background 0.2s',
         }}
       >
-        <div style={{ width: '100%', maxWidth: 400 }}>
+        <div style={{ width: '100%', maxWidth: 400, margin: 'auto 0' }}>
           {/* Mobile logo */}
           <div
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: 36 }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 6,
+              marginBottom: 'clamp(12px, 2.5vh, 24px)',
+            }}
             className="mobile-logo"
           >
             <style>{`@media(min-width:1024px){.mobile-logo{display:none!important}}`}</style>
-            <img src="/logo-dark.svg" alt="TREK" style={{ height: 48 }} />
+            <img src="/logo-dark.svg" alt="TREK" style={{ height: 'clamp(36px, 4.5vh, 46px)' }} />
             <p
               style={{
                 margin: 0,
-                fontSize: 'calc(16px * var(--fs-scale-subtitle, 1))',
+                fontSize: 'calc(14.5px * var(--fs-scale-subtitle, 1))',
                 color: '#9ca3af',
                 fontFamily: "'MuseoModerno', sans-serif",
                 textTransform: 'lowercase',
@@ -459,8 +487,9 @@ export default function LoginPage(): React.ReactElement {
               background: 'white',
               borderRadius: 20,
               border: '1px solid #e5e7eb',
-              padding: '36px 32px',
+              padding: 'clamp(20px, 3.2vh, 32px) clamp(20px, 3vw, 32px)',
               boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+              transition: 'background 0.2s, border-color 0.2s',
             }}
           >
             {oidcOnly ? (
@@ -544,7 +573,7 @@ export default function LoginPage(): React.ReactElement {
                       ? t('login.mfaTitle')
                       : t('login.title')}
                 </h2>
-                <p style={{ margin: '0 0 28px', fontSize: 'calc(13.5px * var(--fs-scale-body, 1))', color: '#9ca3af' }}>
+                <p style={{ margin: '0 0 clamp(14px, 2vh, 22px)', fontSize: 'calc(13.5px * var(--fs-scale-body, 1))', color: '#9ca3af' }}>
                   {passwordChangeStep
                     ? t('login.setNewPasswordHint')
                     : mfaStep
@@ -552,7 +581,7 @@ export default function LoginPage(): React.ReactElement {
                       : t('login.subtitle')}
                 </p>
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {error && (
                     <div
                       style={{
@@ -803,7 +832,7 @@ export default function LoginPage(): React.ReactElement {
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           gap: 12,
-                          marginTop: 12,
+                          marginTop: 10,
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -850,7 +879,7 @@ export default function LoginPage(): React.ReactElement {
                       justifyContent: 'center',
                       gap: 8,
                       opacity: isLoading ? 0.7 : 1,
-                      transition: 'opacity 0.15s',
+                      transition: 'opacity 0.15s, background 0.15s',
                     }}
                     onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
                       if (!isLoading) e.currentTarget.style.background = '#1f2937';
@@ -896,7 +925,7 @@ export default function LoginPage(): React.ReactElement {
           {/* OIDC / SSO login button (only when OIDC is configured, oidc_login enabled, not in oidc-only mode) */}
           {appConfig?.oidc_configured && appConfig?.oidc_login && !oidcOnly && (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
                 <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
                 <span style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))', color: '#9ca3af' }}>
                   {t('common.or')}
@@ -913,9 +942,9 @@ export default function LoginPage(): React.ReactElement {
                   mode === 'login' ? (inviteToken ? '&' : '?') + 'remember=' + (rememberMe ? '1' : '0') : ''
                 }`}
                 style={{
-                  marginTop: 12,
+                  marginTop: 10,
                   width: '100%',
-                  padding: '12px',
+                  padding: '11px 12px',
                   background: 'white',
                   color: '#374151',
                   border: '1px solid #d1d5db',
@@ -952,7 +981,7 @@ export default function LoginPage(): React.ReactElement {
           {passkeyAvailable && (
             <>
               {!oidcButtonShown && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
                   <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
                   <span style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))', color: '#9ca3af' }}>
                     {t('common.or')}
@@ -965,9 +994,9 @@ export default function LoginPage(): React.ReactElement {
                 onClick={handlePasskeyLogin}
                 disabled={isLoading}
                 style={{
-                  marginTop: 12,
+                  marginTop: 10,
                   width: '100%',
-                  padding: '12px',
+                  padding: '11px 12px',
                   background: 'white',
                   color: '#374151',
                   border: '1px solid #d1d5db',
@@ -1008,14 +1037,14 @@ export default function LoginPage(): React.ReactElement {
               onClick={handleDemoLogin}
               disabled={isLoading}
               style={{
-                marginTop: 16,
+                marginTop: 12,
                 width: '100%',
-                padding: '14px',
+                padding: '11px 14px',
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 color: '#451a03',
                 border: 'none',
                 borderRadius: 14,
-                fontSize: 'calc(15px * var(--fs-scale-subtitle, 1))',
+                fontSize: 'calc(14.5px * var(--fs-scale-subtitle, 1))',
                 fontWeight: 700,
                 cursor: isLoading ? 'default' : 'pointer',
                 fontFamily: 'inherit',
@@ -1046,6 +1075,23 @@ export default function LoginPage(): React.ReactElement {
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg) } }
+
+        .login-page-root {
+          height: 100vh;
+          height: 100dvh;
+          max-height: 100vh;
+          max-height: 100dvh;
+          width: 100%;
+          overflow: hidden;
+        }
+
+        .login-right-panel {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .login-right-panel::-webkit-scrollbar {
+          display: none;
+        }
 
         /* ── Branding panel ──────────────────────────────────────────────────
            Aurora: three colour fields, blurred far past their own shape, drifting
