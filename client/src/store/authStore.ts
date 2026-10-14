@@ -104,7 +104,8 @@ let authSequence = 0
  * Mark the session authenticated and point the offline DB at this user's scoped
  * database before any background sync runs, so cached data never crosses users.
  */
-async function onAuthSuccess(userId: number): Promise<void> {
+async function onAuthSuccess(userId?: number | null): Promise<void> {
+  if (!userId) return
   setAuthed(true)
   // Whatever brought them back in - password, SSO, MFA, demo, a restored
   // session - the tab is no longer "just signed out", so the login page may
@@ -165,6 +166,9 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: false, error: null })
         return { mfa_required: true as const, mfa_token: data.mfa_token }
       }
+      if (!data?.user) {
+        throw new Error('Invalid server response: missing user data')
+      }
       set({
         user: data.user,
         isAuthenticated: true,
@@ -172,7 +176,9 @@ export const useAuthStore = create<AuthState>()(
         isLoading: false,
         error: null,
       })
-      await onAuthSuccess(data.user.id)
+      if (data.user?.id) {
+        await onAuthSuccess(data.user.id)
+      }
       connect()
       tripSyncManager.syncAll().catch(console.error)
       if (!data.user?.must_change_password) {
@@ -191,6 +197,9 @@ export const useAuthStore = create<AuthState>()(
     set({ isLoading: true, error: null })
     try {
       const data = await authApi.verifyMfaLogin({ mfa_token: mfaToken, code: code.replace(/\s/g, ''), remember_me: rememberMe })
+      if (!data?.user) {
+        throw new Error('Invalid server response: missing user data')
+      }
       set({
         user: data.user,
         isAuthenticated: true,
@@ -198,7 +207,9 @@ export const useAuthStore = create<AuthState>()(
         isLoading: false,
         error: null,
       })
-      await onAuthSuccess(data.user.id)
+      if (data.user?.id) {
+        await onAuthSuccess(data.user.id)
+      }
       connect()
       tripSyncManager.syncAll().catch(console.error)
       if (!data.user?.must_change_password) {
@@ -217,6 +228,9 @@ export const useAuthStore = create<AuthState>()(
     set({ isLoading: true, error: null })
     try {
       const data = await authApi.register({ username, email, password, invite_token })
+      if (!data?.user) {
+        throw new Error('Invalid server response: missing user data')
+      }
       set({
         user: data.user,
         isAuthenticated: true,
@@ -224,7 +238,9 @@ export const useAuthStore = create<AuthState>()(
         isLoading: false,
         error: null,
       })
-      await onAuthSuccess(data.user.id)
+      if (data.user?.id) {
+        await onAuthSuccess(data.user.id)
+      }
       connect()
       tripSyncManager.syncAll().catch(console.error)
       useSystemNoticeStore.getState().fetch()
@@ -299,15 +315,19 @@ export const useAuthStore = create<AuthState>()(
     try {
       const data = await authApi.me()
       if (seq !== authSequence) return // stale response — a login/register happened meanwhile
-      set({
-        user: data.user,
-        isAuthenticated: true,
-        loggingOut: false,
-        isLoading: false,
-        authCheckFailed: false,
-      })
-      await onAuthSuccess(data.user.id)
-      connect()
+      if (data?.user) {
+        set({
+          user: data.user,
+          isAuthenticated: true,
+          loggingOut: false,
+          isLoading: false,
+          authCheckFailed: false,
+        })
+        if (data.user.id) {
+          await onAuthSuccess(data.user.id)
+        }
+        connect()
+      }
     } catch (err: unknown) {
       if (seq !== authSequence) return // stale response — ignore
       const status = err && typeof err === 'object' && 'response' in err
@@ -431,6 +451,9 @@ export const useAuthStore = create<AuthState>()(
     set({ isLoading: true, error: null })
     try {
       const data = await authApi.demoLogin()
+      if (!data?.user) {
+        throw new Error('Invalid server response: missing user data')
+      }
       set({
         user: data.user,
         isAuthenticated: true,
@@ -439,7 +462,9 @@ export const useAuthStore = create<AuthState>()(
         demoMode: true,
         error: null,
       })
-      await onAuthSuccess(data.user.id)
+      if (data.user?.id) {
+        await onAuthSuccess(data.user.id)
+      }
       connect()
       return data
     } catch (err: unknown) {
