@@ -297,7 +297,7 @@ export function useLogin() {
         setIsLoading(false)
         return
       }
-      const result = await login(trimmedUser, undefined, rememberMe)
+      const result = await login(trimmedUser, undefined, rememberMe, false, inviteToken || undefined)
       if ('user_not_found' in result && result.user_not_found) {
         setIsLoading(false)
         setNewUserPrompt(trimmedUser)
@@ -335,7 +335,7 @@ export function useLogin() {
     setIsLoading(true)
     setError('')
     try {
-      const result = await login(newUserPrompt, undefined, rememberMe, true)
+      const result = await login(newUserPrompt, undefined, rememberMe, true, inviteToken || undefined)
       setNewUserPrompt(null)
       if ('user' in result && result.user?.must_change_password) {
         setSavedLoginPassword(password)

@@ -67,7 +67,7 @@ interface AuthState {
   /** Server records which search result was picked (admin switch, default off). */
   placeShadowEnabled: boolean
 
-  login: (emailOrUsername: string, password?: string, rememberMe?: boolean) => Promise<LoginResult>
+  login: (emailOrUsername: string, password?: string, rememberMe?: boolean, createIfMissing?: boolean, inviteToken?: string) => Promise<LoginResult>
   completeMfaLogin: (mfaToken: string, code: string, rememberMe?: boolean) => Promise<AuthResponse>
   register: (username: string, email: string, password: string, invite_token?: string) => Promise<AuthResponse>
   logout: () => Promise<void>
@@ -149,14 +149,14 @@ export const useAuthStore = create<AuthState>()(
   // Fail-closed: an old server sends no flag and nothing is logged.
   placeShadowEnabled: false,
 
-  login: async (emailOrUsername: string, password?: string, rememberMe?: boolean, createIfMissing?: boolean) => {
+  login: async (emailOrUsername: string, password?: string, rememberMe?: boolean, createIfMissing?: boolean, inviteToken?: string) => {
     authSequence++
     set({ isLoading: true, error: null })
     try {
-      const payload: { email?: string; username?: string; password?: string; remember_me?: boolean; create_if_missing?: boolean } =
+      const payload: { email?: string; username?: string; password?: string; remember_me?: boolean; create_if_missing?: boolean; invite_token?: string } =
         password !== undefined && password !== ''
-          ? { email: emailOrUsername, password, remember_me: rememberMe }
-          : { username: emailOrUsername, remember_me: rememberMe, create_if_missing: createIfMissing }
+          ? { email: emailOrUsername, password, remember_me: rememberMe, ...(inviteToken ? { invite_token: inviteToken } : {}) }
+          : { username: emailOrUsername, remember_me: rememberMe, create_if_missing: createIfMissing, ...(inviteToken ? { invite_token: inviteToken } : {}) }
       const data = await authApi.login(payload) as AuthResponse & { mfa_required?: boolean; mfa_token?: string; user_not_found?: boolean; username?: string }
       if (data.user_not_found) {
         set({ isLoading: false, error: null })

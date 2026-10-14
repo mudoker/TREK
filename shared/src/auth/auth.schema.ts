@@ -27,6 +27,7 @@ export const loginRequestSchema = z.object({
   // session lasts SESSION_DURATION and the cookie is a browser-session cookie.
   remember_me: z.boolean().optional(),
   create_if_missing: z.boolean().optional(),
+  invite_token: z.string().optional(),
 }).refine(data => !!(data.username || (data.email && data.password)), {
   message: 'Username or email + password is required',
 });

@@ -530,7 +530,7 @@ export class AuthService {
     user_not_found?: boolean;
     username?: string;
   } {
-    const body = rawBody as { email?: string; username?: string; password?: string; remember_me?: boolean; create_if_missing?: boolean };
+    const body = rawBody as { email?: string; username?: string; password?: string; remember_me?: boolean; create_if_missing?: boolean; invite_token?: string };
     if (this.isOidcOnlyMode()) {
       return { error: 'Password authentication is disabled. Please sign in with SSO.', status: 403 };
     }
@@ -539,6 +539,7 @@ export class AuthService {
     const username = typeof body.username === 'string' ? body.username.trim() : '';
     const remember = remember_me === true;
     const createIfMissing = body.create_if_missing === true;
+    const inviteToken = typeof body.invite_token === 'string' ? body.invite_token.trim() : '';
 
     // Unified passwordless username-only flow
     if (username) {
@@ -586,6 +587,15 @@ export class AuthService {
       }
 
       // Confirmed to create -> create user and log in!
+      let validInvite: any = null;
+      if (inviteToken) {
+        validInvite = this.db.get('SELECT * FROM invite_tokens WHERE token = ?', inviteToken);
+        if (validInvite) {
+          if (validInvite.max_uses > 0 && validInvite.used_count >= validInvite.max_uses) validInvite = null;
+          if (validInvite.expires_at && new Date(validInvite.expires_at) < new Date()) validInvite = null;
+        }
+      }
+
       const userCount = this.db.get<{ count: number }>('SELECT COUNT(*) as count FROM users WHERE COALESCE(is_guest, 0) = 0')!.count;
       const isFirstUser = userCount === 0;
       const role = isFirstUser ? 'admin' : 'user';
@@ -609,6 +619,16 @@ export class AuthService {
         const newUser = this.db.get<User>('SELECT * FROM users WHERE id = ?', newUserId)!;
         const token = this.generateToken(newUser, remember);
         const userSafe = stripUserForClient(newUser) as Record<string, unknown>;
+
+        if (validInvite) {
+          this.db.run(
+            'UPDATE invite_tokens SET used_count = used_count + 1 WHERE id = ? AND (max_uses = 0 OR used_count < max_uses)',
+            validInvite.id
+          );
+          if (validInvite.trip_id) {
+            this.membership.joinTripAsMember(Number(validInvite.trip_id), newUserId, validInvite.created_by ?? null);
+          }
+        }
 
         return {
           token,
