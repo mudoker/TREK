@@ -17,6 +17,7 @@ import { useLogin } from './login/useLogin';
 import LoginWorld from './login/LoginWorld';
 import { clearSignedOut } from '../utils/signedOut';
 import { useSettingsStore } from '../store/settingsStore';
+import NewUserConfirmModal from '../components/shared/NewUserConfirmModal';
 
 /** Fixed so the sky does not reshuffle on every render. */
 const STARFIELD = [
@@ -79,6 +80,9 @@ export default function LoginPage(): React.ReactElement {
     noRedirect,
     showRegisterOption,
     oidcOnly,
+    newUserPrompt,
+    confirmCreateUser,
+    cancelCreateUser,
     handleDemoLogin,
     handleSubmit,
     handlePasskeyLogin,
@@ -1194,6 +1198,13 @@ export default function LoginPage(): React.ReactElement {
         }
 
       `}</style>
+      <NewUserConfirmModal
+        isOpen={Boolean(newUserPrompt)}
+        username={newUserPrompt || ''}
+        isLoading={isLoading}
+        onConfirm={confirmCreateUser}
+        onCancel={cancelCreateUser}
+      />
     </div>
   );
 }

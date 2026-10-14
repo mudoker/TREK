@@ -148,15 +148,19 @@ export const useAuthStore = create<AuthState>()(
   // Fail-closed: an old server sends no flag and nothing is logged.
   placeShadowEnabled: false,
 
-  login: async (emailOrUsername: string, password?: string, rememberMe?: boolean) => {
+  login: async (emailOrUsername: string, password?: string, rememberMe?: boolean, createIfMissing?: boolean) => {
     authSequence++
     set({ isLoading: true, error: null })
     try {
-      const payload: { email?: string; username?: string; password?: string; remember_me?: boolean } =
+      const payload: { email?: string; username?: string; password?: string; remember_me?: boolean; create_if_missing?: boolean } =
         password !== undefined && password !== ''
           ? { email: emailOrUsername, password, remember_me: rememberMe }
-          : { username: emailOrUsername, remember_me: rememberMe }
-      const data = await authApi.login(payload) as AuthResponse & { mfa_required?: boolean; mfa_token?: string }
+          : { username: emailOrUsername, remember_me: rememberMe, create_if_missing: createIfMissing }
+      const data = await authApi.login(payload) as AuthResponse & { mfa_required?: boolean; mfa_token?: string; user_not_found?: boolean; username?: string }
+      if (data.user_not_found) {
+        set({ isLoading: false, error: null })
+        return { user_not_found: true as const, username: data.username || emailOrUsername }
+      }
       if (data.mfa_required && data.mfa_token) {
         set({ isLoading: false, error: null })
         return { mfa_required: true as const, mfa_token: data.mfa_token }

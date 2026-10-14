@@ -73,6 +73,9 @@ function makeFixture() {
     noRedirect: false,
     showRegisterOption: true,
     oidcOnly: false,
+    newUserPrompt: null,
+    confirmCreateUser: vi.fn(async () => {}),
+    cancelCreateUser: vi.fn(),
     handleDemoLogin: vi.fn(async () => {}),
     handleSubmit: vi.fn(async (_e: React.FormEvent<HTMLFormElement>) => {}),
     handlePasskeyLogin: vi.fn(async () => {}),
@@ -316,6 +319,17 @@ describe('LoginPage — unified username form', () => {
       'href',
       'https://github.com/liketrek/TREK/wiki/Troubleshooting',
     );
+  it('FE-LOGIN-WIRE-017b: renders NewUserConfirmModal when newUserPrompt is set', () => {
+    fixture.newUserPrompt = 'charlie';
+    renderPage();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('charlie')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(fixture.cancelCreateUser).toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    expect(fixture.confirmCreateUser).toHaveBeenCalled();
   });
 });
 

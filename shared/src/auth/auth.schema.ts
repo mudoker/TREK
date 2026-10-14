@@ -26,6 +26,7 @@ export const loginRequestSchema = z.object({
   // (SESSION_DURATION_REMEMBER) JWT + persistent cookie; when false/absent the
   // session lasts SESSION_DURATION and the cookie is a browser-session cookie.
   remember_me: z.boolean().optional(),
+  create_if_missing: z.boolean().optional(),
 }).refine(data => !!(data.username || (data.email && data.password)), {
   message: 'Username or email + password is required',
 });

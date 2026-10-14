@@ -94,6 +94,9 @@ export class AuthPublicController {
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status!);
     }
+    if (result.user_not_found) {
+      return { user_not_found: true, username: result.username };
+    }
     if (result.mfa_required) {
       return { mfa_required: true, mfa_token: result.mfa_token };
     }

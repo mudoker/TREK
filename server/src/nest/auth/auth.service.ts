@@ -527,8 +527,10 @@ export class AuthService {
     auditUserId?: number | null;
     auditAction?: string;
     auditDetails?: Record<string, unknown>;
+    user_not_found?: boolean;
+    username?: string;
   } {
-    const body = rawBody as { email?: string; username?: string; password?: string; remember_me?: boolean };
+    const body = rawBody as { email?: string; username?: string; password?: string; remember_me?: boolean; create_if_missing?: boolean };
     if (this.isOidcOnlyMode()) {
       return { error: 'Password authentication is disabled. Please sign in with SSO.', status: 403 };
     }
@@ -536,6 +538,7 @@ export class AuthService {
     const { email, password, remember_me } = body;
     const username = typeof body.username === 'string' ? body.username.trim() : '';
     const remember = remember_me === true;
+    const createIfMissing = body.create_if_missing === true;
 
     // Unified passwordless username-only flow
     if (username) {
@@ -574,7 +577,15 @@ export class AuthService {
         };
       }
 
-      // User does not exist -> auto-create user and log in!
+      // User does not exist: ask user confirmation instead of auto-creating
+      if (!createIfMissing) {
+        return {
+          user_not_found: true,
+          username,
+        };
+      }
+
+      // Confirmed to create -> create user and log in!
       const userCount = this.db.get<{ count: number }>('SELECT COUNT(*) as count FROM users WHERE COALESCE(is_guest, 0) = 0')!.count;
       const isFirstUser = userCount === 0;
       const role = isFirstUser ? 'admin' : 'user';

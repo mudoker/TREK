@@ -62,6 +62,7 @@ export function useLogin() {
   const [savedLoginPassword, setSavedLoginPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [newUserPrompt, setNewUserPrompt] = useState<string | null>(null)
 
   const { login, register, demoLogin, completeMfaLogin, loadUser } = useAuthStore()
   const { setLanguageLocal, setLanguageTransient, loadSettings } = useSettingsStore()
@@ -292,6 +293,11 @@ export function useLogin() {
         return
       }
       const result = await login(trimmedUser, undefined, rememberMe)
+      if ('user_not_found' in result && result.user_not_found) {
+        setIsLoading(false)
+        setNewUserPrompt(trimmedUser)
+        return
+      }
       if ((result as { insecureCookie?: boolean }).insecureCookie) {
         // Credentials were correct, but the secure cookie won't survive plain
         // HTTP — proceeding would just dead-end on "Access token required".
@@ -319,6 +325,32 @@ export function useLogin() {
     }
   }
 
+  const confirmCreateUser = async (): Promise<void> => {
+    if (!newUserPrompt) return
+    setIsLoading(true)
+    setError('')
+    try {
+      const result = await login(newUserPrompt, undefined, rememberMe, true)
+      setNewUserPrompt(null)
+      if ('user' in result && result.user?.must_change_password) {
+        setSavedLoginPassword(password)
+        setPasswordChangeStep(true)
+        setIsLoading(false)
+        return
+      }
+      takeOff()
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, t('login.error')))
+      setIsLoading(false)
+      setNewUserPrompt(null)
+    }
+  }
+
+  const cancelCreateUser = (): void => {
+    setNewUserPrompt(null)
+    setIsLoading(false)
+  }
+
   const showRegisterOption = false
 
   // In OIDC-only mode, show a minimal page that redirects directly to the IdP
@@ -332,6 +364,7 @@ export function useLogin() {
     langDropdownOpen, setLangDropdownOpen, setLanguageLocal,
     showTakeoff, mfaStep, setMfaStep, mfaToken, setMfaToken, mfaCode, setMfaCode,
     passwordChangeStep, newPassword, setNewPassword, confirmPassword, setConfirmPassword,
+    newUserPrompt, confirmCreateUser, cancelCreateUser,
     noRedirect, showRegisterOption, oidcOnly,
     handleDemoLogin, handleSubmit, handlePasskeyLogin,
   }
