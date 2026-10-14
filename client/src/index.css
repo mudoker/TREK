@@ -553,12 +553,20 @@ input[type="number"], input[type="time"], input[type="date"], input[type="dateti
   to   { opacity: 1; transform: translateY(0); }
 }
 @media (max-width: 639px) {
-  .trek-modal-enter {
+  .trek-modal-enter:not(.trek-modal-center) {
     animation: trek-drawer-enter 320ms cubic-bezier(0.32, 0.72, 0, 1);
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
     margin-top: auto !important;
     align-self: flex-end;
+  }
+  .trek-modal-center {
+    animation: trek-modal-enter 220ms cubic-bezier(0.23, 1, 0.32, 1) !important;
+    border-bottom-left-radius: 1rem !important;
+    border-bottom-right-radius: 1rem !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+    align-self: center !important;
   }
 }
 .trek-backdrop-enter {

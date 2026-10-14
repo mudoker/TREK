@@ -53,4 +53,11 @@ describe('AppUpdateModal', () => {
       expect(chunkReload.reloadFresh).toHaveBeenCalledTimes(1)
     })
   })
+
+  it('FE-COMP-UPDATE-005: renders version badge when version is specified or detected', () => {
+    render(<AppUpdateModal isOpen={true} version="4.3.4" />)
+    const versionBadge = screen.getByTestId('app-update-version')
+    expect(versionBadge).toBeTruthy()
+    expect(versionBadge.textContent).toBe('v4.3.4')
+  })
 })

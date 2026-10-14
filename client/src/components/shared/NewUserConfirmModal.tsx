@@ -46,13 +46,22 @@ export default function NewUserConfirmModal({
       aria-modal="true"
       aria-labelledby="new-user-modal-title"
       aria-describedby="new-user-modal-desc"
-      className="fixed inset-0 z-[100000] flex items-center justify-center px-4 bg-black/75 backdrop-blur-md trek-backdrop-enter"
-      style={{ paddingBottom: 'var(--bottom-nav-h, 0px)' }}
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md trek-backdrop-enter"
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))',
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))',
+        paddingLeft: 'max(1rem, env(safe-area-inset-left, 1rem))',
+        paddingRight: 'max(1rem, env(safe-area-inset-right, 1rem))',
+      }}
       onClick={isLoading ? undefined : onCancel}
     >
       <div
         role="presentation"
-        className="trek-modal-enter flex flex-col items-center text-center rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md p-6 sm:p-7 bg-surface-card border border-edge-secondary"
+        className="trek-modal-enter trek-modal-center flex flex-col items-center text-center rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md p-6 sm:p-7 bg-surface-card border border-edge-secondary"
+        style={{
+          margin: 'auto',
+          alignSelf: 'center',
+        }}
         onClick={e => e.stopPropagation()}
       >
         <div className="w-14 h-14 rounded-2xl bg-accent/15 text-accent flex items-center justify-center mb-4">
