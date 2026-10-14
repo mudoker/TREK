@@ -246,16 +246,29 @@ export default function LoginPage(): React.ReactElement {
     <div
       className="login-page-root"
       style={{
-        height: '100vh',
-        maxHeight: '100vh',
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100dvh',
+        maxHeight: '100dvh',
         display: 'flex',
         fontFamily: 'var(--font-system)',
-        position: 'relative',
         overflow: 'hidden',
+        overscrollBehavior: 'none',
       }}
     >
       {/* Top right actions: Theme toggle & Language dropdown */}
-      <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: 'max(16px, env(safe-area-inset-top, 16px))',
+          right: 'max(16px, env(safe-area-inset-right, 16px))',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
         <button
           type="button"
           onClick={toggleTheme}
@@ -494,33 +507,37 @@ export default function LoginPage(): React.ReactElement {
         className="login-right-panel"
         style={{
           flex: 1,
+          width: '100%',
           height: '100%',
           maxHeight: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: 'clamp(16px, 3vh, 32px) 24px',
+          padding: 'clamp(14px, 2.5vh, 28px) clamp(16px, 4vw, 24px)',
+          paddingTop: 'max(clamp(14px, 2.5vh, 28px), env(safe-area-inset-top, 16px))',
+          paddingBottom: 'max(clamp(14px, 2.5vh, 28px), env(safe-area-inset-bottom, 16px))',
           background: isDarkActive ? '#090d16' : '#f9fafb',
           overflowY: 'auto',
+          overscrollBehavior: 'none',
           boxSizing: 'border-box',
           transition: 'background 0.2s',
         }}
       >
-        <div style={{ width: '100%', maxWidth: 400, margin: 'auto 0' }}>
+        <div style={{ width: '100%', maxWidth: 400 }}>
           {/* Mobile logo */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 6,
-              marginBottom: 'clamp(12px, 2.5vh, 24px)',
+              gap: 4,
+              marginBottom: 'clamp(10px, 2vh, 18px)',
             }}
             className="mobile-logo"
           >
             <style>{`@media(min-width:1024px){.mobile-logo{display:none!important}}`}</style>
-            <img src={isDarkActive ? '/logo-light.svg' : '/logo-dark.svg'} alt="TREK" style={{ height: 'clamp(36px, 4.5vh, 46px)' }} />
+            <img src={isDarkActive ? '/logo-light.svg' : '/logo-dark.svg'} alt="TREK" style={{ height: 'clamp(32px, 4vh, 42px)' }} />
             <p
               style={{
                 margin: 0,
@@ -540,7 +557,7 @@ export default function LoginPage(): React.ReactElement {
               background: isDarkActive ? '#111827' : 'white',
               borderRadius: 20,
               border: isDarkActive ? '1px solid #1f2937' : '1px solid #e5e7eb',
-              padding: 'clamp(20px, 3.2vh, 32px) clamp(20px, 3vw, 32px)',
+              padding: 'clamp(18px, 2.8vh, 28px) clamp(18px, 3vw, 28px)',
               boxShadow: isDarkActive ? '0 4px 24px rgba(0,0,0,0.45)' : '0 2px 16px rgba(0,0,0,0.06)',
               transition: 'background 0.2s, border-color 0.2s',
             }}
@@ -1130,17 +1147,25 @@ export default function LoginPage(): React.ReactElement {
         @keyframes spin { to { transform: rotate(360deg) } }
 
         .login-page-root {
-          height: 100vh;
-          height: 100dvh;
-          max-height: 100vh;
-          max-height: 100dvh;
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
           width: 100%;
+          width: 100vw;
+          height: 100%;
+          height: 100dvh;
+          max-height: 100dvh;
           overflow: hidden;
+          overscroll-behavior: none;
         }
 
         .login-right-panel {
           scrollbar-width: none;
           -ms-overflow-style: none;
+          overscroll-behavior: none;
+          -webkit-overflow-scrolling: touch;
         }
         .login-right-panel::-webkit-scrollbar {
           display: none;

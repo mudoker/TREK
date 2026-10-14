@@ -8,6 +8,7 @@ import { wasSignedOut } from '../../utils/signedOut'
 import { authApi, configApi } from '../../api/client'
 import { getApiErrorMessage } from '../../types'
 import { START_DESTINATION_ROUTE } from '../../utils/startDestination'
+import { lockBodyScroll } from '../../utils/bodyScrollLock'
 
 interface AppConfig {
   has_users: boolean
@@ -83,6 +84,10 @@ export function useLogin() {
     // No page to return to: hand the choice to RootRedirect, which is the one
     // place that knows whether this user starts on the dashboard or in a trip.
     return START_DESTINATION_ROUTE
+  }, [])
+
+  useEffect(() => {
+    return lockBodyScroll()
   }, [])
 
   useEffect(() => {
