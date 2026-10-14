@@ -32,6 +32,9 @@ import { SystemNoticeHost } from './components/SystemNotices/SystemNoticeHost.js
 // Notice action registrations (side-effect imports):
 import './pages/Trips/noticeActions.js'
 import { managedRoutes } from './managed'
+import AppUpdateModal from './components/shared/AppUpdateModal'
+import { useAppUpdateListener } from './hooks/useAppUpdateListener'
+import { useAppUpdateStore } from './store/appUpdateStore'
 
 // Every page below loads on demand. The entry chunk used to carry all twenty of
 // them eagerly, so opening /dashboard also paid for the planner, the journal, the
@@ -329,6 +332,8 @@ export default function App() {
 
   useInAppNotificationListener()
   useRoadtripPreferencesSync()
+  useAppUpdateListener()
+  const updateAvailable = useAppUpdateStore(s => s.updateAvailable)
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -385,6 +390,7 @@ export default function App() {
       {!hideAuthedWidgets && <ErrorBoundary boundaryId="widget:background-tasks" fallback={null}><BackgroundTasksWidget /></ErrorBoundary>}
       {!hideAuthedWidgets && (isPhone ? <MSaveToCollectionSheet /> : <SaveToCollectionModal />)}
       <ErrorBoundary boundaryId="widget:offline-banner" fallback={null}><OfflineBanner /></ErrorBoundary>
+      <AppUpdateModal isOpen={updateAvailable} />
       {/* One boundary for all route chunks, above <Routes> so it stays mounted
           across navigations. react-router runs location updates inside a transition,
           so a mounted boundary keeps the current page on screen instead of flashing
